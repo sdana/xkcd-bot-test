@@ -1,5 +1,6 @@
 from app import app
 from flask import jsonify
+from flask import request
 import re
 from bs4 import BeautifulSoup
 import requests
@@ -13,11 +14,7 @@ def get_comic_list(search_query):
 
     data = requests.get(url)
 
-    #Local HTML file for testing purposes
-    # filename = './nothing1.html'
-
     #Initialize our soup object from our HTML results (or local file)
-    # soup = BeautifulSoup(open(filename), 'html.parser')
     soup = BeautifulSoup(data.text, 'html.parser')
 
     #Use BeautifulSoup to parse through the entire HTML and return the specific anchor tags we're looking for
@@ -42,3 +39,32 @@ def get_single_comic(comic_number):
         url = "https://dynamic.xkcd.com/api-0/jsonp/comic/" + str(comic_number)
         comic = requests.get(url).json()
         return jsonify(comic)
+
+######################## SLACK TEST################################
+@app.route("/helloworld", methods=["POST"])
+def hello_world():
+        print(request.form['text'])
+        return jsonify({
+                "response_type": "in_channel",
+                "text": "Hello World, I'm alive!"
+        })
+
+
+@app.route("/solocomic", methods=['POST'])
+def get_solo_comic():
+        print(request.form['text'])
+        url = "https://dynamic.xkcd.com/api-0/jsonp/comic/" + request.form['text']
+        comic = requests.get(url).json()
+        print(comic['img'])
+
+        returnComic = {
+            "blocks": [
+                {
+                    "type": "image",
+                    "image_url": comic['img'],
+                    "alt_text": comic['title']
+                }
+            ]
+        }
+        comicObject = jsonify(returnComic)
+        return comicObject
